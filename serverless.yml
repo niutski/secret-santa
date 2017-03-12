@@ -1,0 +1,29 @@
+service: fb-secret-santa
+
+provider:
+  name: aws
+  runtime: nodejs4.3
+  stage: dev
+  region: eu-west-1
+  profile: secretsanta
+
+plugins:
+  - serverless-webpack
+  - serverless-secrets-plugin
+
+custom:
+  secrets: ${file(secrets.${opt:stage, self:provider.stage}.yml)}
+
+functions:
+  fb:
+    handler: handler.router
+    events:
+      - http:
+          path: api/fb
+          method: any
+          integration: lambda
+    environment:
+      MESSENGER_APP_SECRET: ${self:custom.secrets.MESSENGER_APP_SECRET}
+      MESSENGER_PAGE_ACCESS_TOKEN: ${self:custom.secrets.MESSENGER_PAGE_ACCESS_TOKEN}
+      MESSENGER_VALIDATION_TOKEN: ${self:custom.secrets.MESSENGER_VALIDATION_TOKEN}
+      SERVER_URL: ${self:custom.secrets.SERVER_URL}
