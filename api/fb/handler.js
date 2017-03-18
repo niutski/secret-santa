@@ -1,7 +1,6 @@
-require('babel-polyfill')
 import config from '../../config'
 import crypto from 'crypto'
-import request from 'request-promise-lite'
+import { handleMessage } from './lib/secret-santa'
 
 export function router(event, context, callback) {
   switch (event.path.proxy) {
@@ -29,11 +28,12 @@ function get(event, context, callback) {
 
 function post(event, context, callback) {
   assertMessageFromFacebook(event, callback)
-  echoReceivedMessage(event.body)
+  const fbMessage = event.body.entry[0].messaging[0]
+  handleMessage(fbMessage.sender.id, fbMessage.message.text)
   callback(null, {status: "200"})
 }
 
-function assertMessageFromFacebook(event, callback, ) {
+function assertMessageFromFacebook(event, callback) {
   var signature = event.headers["X-Hub-Signature"];
 
   if (!signature) {
@@ -51,36 +51,4 @@ function assertMessageFromFacebook(event, callback, ) {
       throw new Error("Couldn't validate the request signature.");
     }
   }
-}
-
-function echoReceivedMessage(messageEvent) {
-  var messageData = {
-    recipient: {
-      id: messageEvent.entry[0].messaging[0].sender.id
-    },
-    message: {
-      text: messageEvent.entry[0].messaging[0].message.text,
-      metadata: "SOMETHING_HERE"
-    }
-  }
-  callSendAPI(messageData)
-}
-
-
-function callSendAPI(json) {
-  const url = "https://graph.facebook.com/v2.6/me/messages"
-  const qs = { access_token: config.PAGE_ACCESS_TOKEN }
-  request.post(url,
-    {
-      body: json,
-      json: true,
-      qs
-    })
-  .then(resp => {
-    console.log("Successfully sent message")
-  })
-  .catch(err => {
-    console.error("Failed to send message:")
-    console.log(err)
-  })
 }

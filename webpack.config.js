@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-  entry: './api/fb/handler.js',
+  entry: ['babel-polyfill', './api/fb/handler.js'],
   output: {
     libraryTarget: 'commonjs',
     path: path.resolve(__dirname, 'dist'),
