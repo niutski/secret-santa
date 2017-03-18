@@ -1,23 +1,25 @@
-import config from '../../config'
+import config, { facebookConfiguration } from '../../config'
 import crypto from 'crypto'
-import { handleMessage } from './lib/secret-santa'
+import { handleMessage, handlePostback } from './lib/secret-santa'
+import { configureProfile } from './lib/fb-api'
 
 export function router(event, context, callback) {
   switch (event.path.proxy) {
     case 'webhook': webhook(event, context, callback); break;
+    case 'configure': configureProfile(facebookConfiguration, callback); break;
     default: callback(new Error("Access denied"))
   }
 }
 
 function webhook(event, context, callback) {
   switch (event.method) {
-    case 'GET': get(event, context, callback); break;
-    case 'POST': post(event, context, callback); break;
+    case 'GET': handleGet(event, context, callback); break;
+    case 'POST': handlePost(event, context, callback); break;
     default: callback(null, {statusCode: 405, input: JSON.stringify(event)})
   }
 }
 
-function get(event, context, callback) {
+function handleGet(event, context, callback) {
   if (event.query['hub.mode'] === 'subscribe' &&
       event.query['hub.verify_token'] === config.VALIDATION_TOKEN) {
       callback(null, parseInt(event.query['hub.challenge'], 10))
@@ -26,10 +28,15 @@ function get(event, context, callback) {
   }
 }
 
-function post(event, context, callback) {
+function handlePost(event, context, callback) {
+  console.log(JSON.stringify(event))
   assertMessageFromFacebook(event, callback)
-  const fbMessage = event.body.entry[0].messaging[0]
-  handleMessage(fbMessage.sender.id, fbMessage.message.text)
+  const messageIn = event.body.entry[0].messaging[0]
+  if (messageIn.text) {
+    handleMessage(messageIn.sender.id, messageIn.message.text)
+  } else if (messageIn.postback) {
+    handlePostback(messageIn.sender.id, messageIn.postback.payload)
+  }
   callback(null, {status: "200"})
 }
 

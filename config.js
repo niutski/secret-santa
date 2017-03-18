@@ -15,3 +15,9 @@ export default {
   PAGE_ACCESS_TOKEN,
   SERVER_URL
 }
+
+export const facebookConfiguration = {
+  get_started: {
+    payload: "get_started"
+  }
+}
