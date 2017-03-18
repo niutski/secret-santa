@@ -3,3 +3,4 @@ node_modules
 .serverless
 secrets.*.yml
 !secrets.*.yml.encrypted
+data/

@@ -19,7 +19,7 @@ functions:
     handler: handler.router
     events:
       - http:
-          path: api/fb
+          path: api/fb/{proxy+}
           method: any
           integration: lambda
     environment:
